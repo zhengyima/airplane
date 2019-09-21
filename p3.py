@@ -376,6 +376,7 @@ def plot_route(distance, qianqu, points, pointsType, tujing_num):
     plt.show()
 
 
+# def gen_route_csv(route, graph_list, pointsType, points, jiaozhengType):
 
 
 
@@ -405,6 +406,7 @@ if __name__ == '__main__':
 
     # print("-------++++++++++")
     print(get_safe_P2(route,0,0,graph_list,pointsType,jiaozhengType))
+
     plot_route(distance_1, qianqu_1, points, pointsType, tujing_num_1)
     # plot_route(distance, qianqu, points, pointsType, tujing_num)
     
