@@ -20,4 +20,4 @@ def get_dubin_L(x1,y1,z1,theta1,x2,y2,z2,theta2):
     # t0 = time.clock()
     DubinsAirplaneSolution = DubinsAirplanePath( start_node, end_node, R_min, Gamma_max )
 
-    return DubinsAirplaneSolution['L']
+    return DubinsAirplaneSolution['L'],DubinsAirplaneSolution

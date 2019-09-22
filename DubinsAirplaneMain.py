@@ -12,8 +12,8 @@ import time
 import sys
 
 pi = np.pi
-dubins_case = 0
-verbose_flag = 0
+dubins_case = 3
+verbose_flag = 6
 plot_flag = 16
 
 class ExecutionFlags(object):
