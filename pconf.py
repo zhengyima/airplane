@@ -1,0 +1,15 @@
+MAX_value = 99999999
+
+DATA = 2
+
+ALPHA = 0.1
+BETA = 0.001
+GAMA = -10
+
+G_P = 1
+H_P = 0
+# F = G_P* G + H_P * H
+
+INCLUDE_DUBIN = True
+FUNC_INDEX = 0
+METHOD = 2

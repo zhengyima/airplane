@@ -5,30 +5,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  
 
-MAX_value = 99999999
-DELTA = 0.001
+from DubinsAirplaneFunctions import * 
+from PlottingTools import plot3
+import numpy as np
+import time
+import sys
+from Dubins_test import get_dubin_L
+from pconf import * 
 
-ALPHA1 = 25
-ALPHA2 = 15
-BETA1 = 20
-BETA2 = 25
-THETA = 30
 
-# ALPHA1 = 20
-# ALPHA2 = 10
-# BETA1 = 15
-# BETA2 = 20
-# THETA = 20
 
-ALPHA = 0.1
-BETA = 0.1
-GAMA = -10
+if DATA == 1:
+    ALPHA1 = 25
+    ALPHA2 = 15
+    BETA1 = 20
+    BETA2 = 25
+    THETA = 30
+    DATASET = "dataset.csv"
+    DELTA = 0.001
 
-G_P = 1
-H_P = 0
-# F = G_P* G + H_P * H
+else:
+    ALPHA1 = 20
+    ALPHA2 = 10
+    BETA1 = 15
+    BETA2 = 20
+    THETA = 20
+    DATASET = "dataset2.csv"
+    DELTA = 0.001
 
-INCLUDE_DUBIN = True
 
 def f1(n):
     return n
@@ -119,7 +123,87 @@ def dijkstra(graph, pointType, s):
     return dist, qianqu, tujing_num
 
 
+def dijkstra_with_stepnum(graph, pointType, s, max_stepnum, func_index, jiaozhengType):
+    # 判断图是否为空，如果为空直接退出
+    # pointType: -1:起始点,0:水平点,1:垂直点,2:终点
+    if graph is None:
+        return None
+    dist = [MAX_value]*len(graph)
+    dist[s] = 0
 
+    shuiping = [MAX_value] * len(graph)
+    chuizhi = [MAX_value] * len(graph)
+
+    shuiping[s] = 0
+    chuizhi[s] = 0
+
+    qianqu = [MAX_value] * len(graph)
+    tujing_num = [MAX_value] * len(graph)
+    tujing_num[s] = 0
+
+    p_safe = [0] * len(graph)
+    p_safe[s] = 1
+
+    S = []
+    Q = [i for i in range(len(graph))]
+    dist_init = [i for i in graph[s]]
+
+    dist_weighted = [MAX_value] * len(graph)
+    dist_weighted[s] = 0
+
+    while Q:
+        u_dist = min([d for v, d in enumerate(dist_init) if v in Q])
+        u = dist_init.index(u_dist)
+ 
+
+        S.append(u)
+        Q.remove(u)
+        # print(u)
+        sys.stdout.write('\r dijkstra running:' + str(len(Q)) + '/' + str(len(graph)))
+        sys.stdout.flush()
+        # print(len(Q),'/',len(graph))
+        for v, d in enumerate(graph[u]):
+            if 0 < d < MAX_value and v in Q:
+                # if dist[v] > dist[u]+d:
+                # print(u,v)
+                route1, route2 = get_two_routes(u,v,qianqu)
+                p1,p2 = get_safe_P(route1,0,0,graph,pointType,jiaozhengType),get_safe_P(route2,0,0,graph,pointType,jiaozhengType)
+                # print(route1,route2,p1,p2)
+                if ALPHA * (dist[v]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((tujing_num[v] + 0.0)/max_stepnum)) + GAMA * p2 > \
+                     ALPHA * ((dist[u] + d)/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((tujing_num[u] + 1.0)/max_stepnum)) + GAMA * p1:
+                    if pointType[v] == 0 and shuiping[u] + d * DELTA < BETA2 \
+                        and chuizhi[u] + d * DELTA < BETA1:
+                        # if jiaozhengType[v] == 1:
+                        dist[v] = dist[u]+d
+                        # dist_init[v] = dist[v]
+                        dist_init[v] = ALPHA * (dist[v]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((tujing_num[v]+0.0)/max_stepnum)) + GAMA * p2
+                        shuiping[v] = 0
+                        chuizhi[v] = chuizhi[u] + d*DELTA
+                        qianqu[v] = u 
+                        tujing_num[v] = tujing_num[u] + 1
+
+                    if pointType[v] == 1 and shuiping[u] + d * DELTA < ALPHA2 \
+                        and chuizhi[u] + d * DELTA < ALPHA1: 
+                        dist[v] = dist[u]+d
+                        # dist_init[v] = dist[v]
+                        dist_init[v] = ALPHA * (dist[v]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((tujing_num[v]+0.0)/max_stepnum)) + GAMA * p2
+
+                        chuizhi[v] = 0
+                        shuiping[v] = shuiping[u] + d * DELTA
+                        qianqu[v] = u
+                        tujing_num[v] = tujing_num[u] + 1
+
+                    if pointType[v] == 2 and shuiping[u] + d* DELTA < THETA \
+                        and chuizhi[u] + d * DELTA < THETA:
+                        dist[v] = dist[u] + d
+                        # dist_init[v] = dist[v]
+                        dist_init[v] = ALPHA * (dist[v]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((tujing_num[v]+0.0)/max_stepnum)) + GAMA * p2
+
+                        qianqu[v] = u
+                        tujing_num[v] = tujing_num[u] + 1
+    
+    return dist, qianqu, tujing_num
+ 
 def get_safe_P(routes, chushi_shuiping, chushi_chuizhi, graph, pointType, jiaozhengType):
     if len(routes) <= 1:
         return 1
@@ -246,7 +330,9 @@ def read_dataset_dubin(file):
     error_cnt = 0
     for i in range(len(points)):
         graph_row = []
-        print(i,'/',len(points))
+        # print(i,'/',len(points))
+        sys.stdout.write('\r dubin processing :' + str(i) + '/' + str(len(points)))
+        sys.stdout.flush()
         for j in range(len(points)):
 
             if i == j:
@@ -270,7 +356,7 @@ def read_dataset_dubin(file):
             try:
                 L12 = get_dubin_L(x1,y1,z1,qishi_angle,x2,y2,z2,end_angle)
             except:
-                print(x1,y1,z1,qishi_angle,x2,y2,z2,end_angle)
+                # print(x1,y1,z1,qishi_angle,x2,y2,z2,end_angle)
                 L12 = MAX_value
                 error_cnt += 1
 
@@ -433,7 +519,7 @@ def astar(graph, pointsType, s, jiaozhengType, max_time):
                 current_route = get_route(parent, points, pointsType, node_current)
                 current_route.append(i)
                 sp_ = get_safe_P(current_route, 0, 0, graph, pointsType, jiaozhengType)
-                print(sp_)
+                # print(sp_)
                 if i not in open_list:
                     open_list.append(i)
                     parent[i] = node_current
@@ -441,10 +527,10 @@ def astar(graph, pointsType, s, jiaozhengType, max_time):
                     chuizhi[i] = cz
                     Dist_[i] = Dist_[node_current] + d
                     Cishu_[i] = Cishu_[node_current] + 1
-                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * ((Cishu_[i]+0.0)/max_time) + GAMA * sp_
+                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[i]+0.0)/max_time)) + GAMA * sp_
                     H[i] = graph[i][-1]
                 else:
-                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * ((Cishu_[node_current] + 1.0)/max_time) + GAMA * sp_
+                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[node_current] + 1.0)/max_time)) + GAMA * sp_
                     if G_current < G[i]:
                         parent[i] = node_current
                         G[i] = G_current
@@ -465,10 +551,10 @@ def astar(graph, pointsType, s, jiaozhengType, max_time):
                     chuizhi[i] = 0
                     Dist_[i] = Dist_[node_current] + d
                     Cishu_[i] = Cishu_[node_current] + 1
-                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * ((Cishu_[i]+0.0)/max_time) + GAMA * sp_
+                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[i]+0.0)/max_time)) + GAMA * sp_
                     H[i] = graph[i][-1]
                 else:
-                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * ((Cishu_[node_current] + 1.0)/max_time) + GAMA * sp_
+                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[node_current] + 1.0)/max_time)) + GAMA * sp_
                     if G_current < G[i]:
                         parent[i] = node_current
                         G[i] = G_current
@@ -490,10 +576,10 @@ def astar(graph, pointsType, s, jiaozhengType, max_time):
                     chuizhi[i] = 0
                     Dist_[i] = Dist_[node_current] + d
                     Cishu_[i] = Cishu_[node_current] + 1
-                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * ((Cishu_[i]+0.0)/max_time) + GAMA * sp_
+                    G[i] = ALPHA * (Dist_[i]/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[i]+0.0)/max_time)) + GAMA * sp_
                     H[i] = graph[i][-1]
                 else:
-                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * ((Cishu_[node_current] + 1.0)/max_time) + GAMA * sp_
+                    G_current = ALPHA * ((Dist_[node_current] + d)/graph[0][-1]) + BETA * funcs[FUNC_INDEX](((Cishu_[node_current] + 1.0)/max_time)) + GAMA * sp_
                     if G_current < G[i]:
                         parent[i] = node_current
                         G[i] = G_current
@@ -534,17 +620,22 @@ if __name__ == '__main__':
     
     
     if INCLUDE_DUBIN:
-        graph_list, pointsType, points, jiaozhengType = read_dataset_dubin("dataset.csv")
+        graph_list, pointsType, points, jiaozhengType = read_dataset_dubin(DATASET)
     else:
-        graph_list, pointsType, points, jiaozhengType = read_dataset("dataset.csv")
+        graph_list, pointsType, points, jiaozhengType = read_dataset(DATASET)
+
 
     distance, qianqu, tujing_num = dijkstra(graph_list, pointsType, 0)
 
-    res = astar(graph_list, pointsType, 0, jiaozhengType, max(tujing_num))
-    print(res)
+    if METHOD == 1:
+        distance_1, res, tujing_num_1 = dijkstra_with_stepnum(graph_list, pointsType, 0, max(tujing_num),0, jiaozhengType )
+    else:   
+        res = astar(graph_list, pointsType, 0, jiaozhengType, max(tujing_num))
+    # res = astar(graph_list, pointsType, 0, jiaozhengType, max(tujing_num))
+    # print(res)
 
     route = get_route(res, points, pointsType, -1)
-    print(route)
+    print("route:",route)
     print("P:",get_safe_P(route,0,0,graph_list,pointsType,jiaozhengType))
     plot_route([], res, points, pointsType, [])
     
