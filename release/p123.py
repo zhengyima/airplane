@@ -697,8 +697,23 @@ def plot_route_DUBIN(distance, qianqu, points, pointsType, tujing_num, graph_lin
 
 
 
-# def gen_x1_to_x2_dubins()
 
+def gen_csv(route, graph, points, pointsType, jiaozhengType):
+
+    shuiping = 0
+    chuizhi = 0
+    f = open("res.csv","w")
+    for i,p in enumerate(route):
+        f.write(str(p)+","+str(chuizhi)+","+str(shuiping)+","+str(pointsType[p])+"\n")
+        if pointsType[p] == 0:
+            shuiping = 0
+        elif pointsType[p] == 1:
+            chuizhi = 0
+        if i < len(route) - 1:
+            shuiping = shuiping + DELTA * graph[p][route[i+1]]
+            chuizhi = chuizhi + DELTA * graph[p][route[i+1]]
+    f.close()
+            
 
 if __name__ == '__main__':
     # graph_list = [ [0, 9, MAX_value, MAX_value, MAX_value, 14,15,MAX_value],
@@ -732,12 +747,15 @@ if __name__ == '__main__':
     print("route:",route)
     print("P:",get_safe_P(route,0,0,graph_list,pointsType,jiaozhengType))
     print("distance:",distance_1[-1])
-
-    if INCLUDE_DUBIN:
-        plot_route_DUBIN([], res, points, pointsType, [], graph_line_points, angles)
-    else:
-        plot_route([], res, points, pointsType, [])
     
+
+    # if INCLUDE_DUBIN:
+    #     plot_route_DUBIN([], res, points, pointsType, [], graph_line_points, angles)
+    # else:
+    #     plot_route([], res, points, pointsType, [])
+    
+    gen_csv(route, graph_list, points, pointsType, jiaozhengType)
+    print("result has been saved to res.csv!")
     # distance, qianqu, tujing_num = dijkstra(graph_list, pointsType, 0)
     
     # distance_1, qianqu_1, tujing_num_1 = dijkstra_with_stepnum(graph_list, pointsType, 0, max(tujing_num),0, jiaozhengType )
