@@ -1027,15 +1027,19 @@ def drawspiral(R=None, gam=None, c=None, psi=None, lam=None, k=None, w=None, q=N
 def ExtractDubinsAirplanePath(DubinsAirplaneSolutions=None):
     # Extract the Dubins Airplane Solution in vector form
     
-    step = 0.01
+    step = 0.1
     
     if DubinsAirplaneSolutions['case'] == 1: # spiral - line - spiral
         r1 = drawspiral(DubinsAirplaneSolutions['R'],DubinsAirplaneSolutions['gamma'], DubinsAirplaneSolutions['c_s'], DubinsAirplaneSolutions['psi_s'], DubinsAirplaneSolutions['lamda_s'], DubinsAirplaneSolutions['k_s'], DubinsAirplaneSolutions['w_s'], DubinsAirplaneSolutions['q_s'],step)
         r2 = drawline(DubinsAirplaneSolutions['w_s'], DubinsAirplaneSolutions['q_s'], DubinsAirplaneSolutions['w_l'], DubinsAirplaneSolutions['q_l'], step)
         r3 = drawspiral(DubinsAirplaneSolutions['R'], DubinsAirplaneSolutions['gamma'], DubinsAirplaneSolutions['c_e'], DubinsAirplaneSolutions['psi_e'], DubinsAirplaneSolutions['lamda_e'], DubinsAirplaneSolutions['k_e'], DubinsAirplaneSolutions['w_e'], DubinsAirplaneSolutions['q_e'], step) 
         path = r1
+        r_r = np.hstack((r1,r3))
         r = np.hstack((r1,r2))
         r = np.hstack((r,r3))
+        s = r2
+        return [r1,r2,r3],[1,0,1]
+
     elif DubinsAirplaneSolutions['case'] == 2: # spiral - spiral - line -spiral
         r1 = drawspiral(DubinsAirplaneSolutions['R'],DubinsAirplaneSolutions['gamma'],DubinsAirplaneSolutions['c_s'],DubinsAirplaneSolutions['psi_s'],DubinsAirplaneSolutions['lamda_s'],DubinsAirplaneSolutions['k_s'],DubinsAirplaneSolutions['w_s'],DubinsAirplaneSolutions['q_s'],step)
         r2 = drawspiral(DubinsAirplaneSolutions['R'],DubinsAirplaneSolutions['gamma'],DubinsAirplaneSolutions['c_si'],DubinsAirplaneSolutions['psi_si'],DubinsAirplaneSolutions['lamda_si'],DubinsAirplaneSolutions['k_si'],DubinsAirplaneSolutions['w_si'],DubinsAirplaneSolutions['q_si'],step)
@@ -1045,6 +1049,11 @@ def ExtractDubinsAirplanePath(DubinsAirplaneSolutions=None):
         r = np.hstack((r1,r2))
         r = np.hstack((r,r3))
         r = np.hstack((r,r4))
+        r_r = np.hstack((r1,r2))
+        r_r = np.hstack((r_r,r4))
+        s = r3
+        return [r1,r2,r3,r4],[1,1,0,1]
+
         
     elif DubinsAirplaneSolutions['case'] == 3: # spiral - line - spiral - spiral
         r1 = drawspiral(DubinsAirplaneSolutions['R'],DubinsAirplaneSolutions['gamma'],DubinsAirplaneSolutions['c_s'],DubinsAirplaneSolutions['psi_s'],DubinsAirplaneSolutions['lamda_s'],DubinsAirplaneSolutions['k_s'],DubinsAirplaneSolutions['w_s'],DubinsAirplaneSolutions['q_s'],step)
@@ -1055,8 +1064,13 @@ def ExtractDubinsAirplanePath(DubinsAirplaneSolutions=None):
         r = np.hstack((r1,r2))
         r = np.hstack((r,r3))
         r = np.hstack((r,r4))
+        r_r = np.hstack((r1,r3))
+        r_r = np.hstack((r_r,r4))
+        s = r3
+        return [r1,r2,r3,r4],[1,0,1,1]
+
     
-    return r
+    # return r, r_r, s
 
 def PrintSolutionAgainstMATLAB(DubinsAirplaneSolution=None):
     print ('DubinsAirplaneSolution = ')
