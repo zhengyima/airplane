@@ -2,17 +2,17 @@ MAX_value = 99999999
 
 
 # 1 for dataset1, 2 for dataset2
-DATA = 1
+DATA = 2
 
 # ALPHA*d + BETA*N + GAMA*P
-ALPHA = 0.1
-BETA = 0
-GAMA = -10
+ALPHA = 1
+BETA = 1
+GAMA = 0
 
 
 # F = G_P* G + H_P * H
 G_P = 1
-H_P = 0
+H_P = 1
 
 
 INCLUDE_DUBIN = False
@@ -21,4 +21,6 @@ INCLUDE_DUBIN = False
 FUNC_INDEX = 0
 
 # 1 for dij, 2 for A*
-METHOD = 1
+METHOD = 2
+
+GEN_POINTS = False
