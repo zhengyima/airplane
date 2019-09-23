@@ -10,6 +10,8 @@
 
 复杂环境下航迹快速规划是智能飞行器控制的一个重要课题。由于系统结构限制，这类飞行器的定位系统无法对自身进行精准定位，一旦定位误差积累到一定程度可能导致任务失败。因此，在飞行过程中对定位误差进行校正是智能飞行器航迹规划中一项重要任务。本题目研究智能飞行器在系统定位精度限制下的航迹快速规划问题。
 
+ps. 如果走运拿了奖就贴pdf:)
+
 # Preinstallation
 
 Before launch the script install these packages in your **Python3** environment:
